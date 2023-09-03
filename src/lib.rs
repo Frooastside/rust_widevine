@@ -1,29 +1,28 @@
 pub mod error;
 pub mod license_protocol;
 
+use crate::{
+    error::Error,
+    license_protocol::{
+        license_request::{
+            content_identification::{ContentIdVariant, WidevinePsshData},
+            ContentIdentification, RequestType,
+        },
+        signed_message::MessageType,
+        ClientIdentification, License, LicenseRequest, LicenseType, ProtocolVersion,
+    },
+};
 use license_protocol::SignedMessage;
 use openssl::{
     hash::MessageDigest,
     pkey::PKey,
-    rsa::Padding,
+    rsa::{Padding, Rsa},
     sign::{RsaPssSaltlen, Signer},
     symm::{decrypt, Cipher},
 };
 use prost::Message;
 use rand::Rng;
 use std::time::{SystemTime, UNIX_EPOCH};
-
-use crate::{
-    error::Error,
-    license_protocol::{
-        license_request::content_identification::{ContentIdVariant, WidevinePsshData},
-        ClientIdentification, License, LicenseRequest,
-    },
-};
-
-use crate::license_protocol::{
-    license_request::ContentIdentification, LicenseType, ProtocolVersion,
-};
 
 const WIDEVINE_SYSTEM_ID: [u8; 16] = [
     237, 239, 139, 169, 121, 214, 74, 206, 163, 200, 39, 220, 213, 29, 33, 237,
@@ -51,17 +50,15 @@ impl Session {
         };
     }
 
-    pub fn create_license_request(&mut self, pssh: Vec<u8>) -> Result<Vec<u8>, Error> {
+    pub fn create_license_request(&mut self, pssh: &Vec<u8>) -> Result<Vec<u8>, Error> {
         assert_eq!(pssh[12..28], WIDEVINE_SYSTEM_ID);
-        check_pssh(pssh.clone());
+        check_pssh(&pssh);
         let client_identification: ClientIdentification =
-            ClientIdentification::decode(&*self.identifier_blob).unwrap();
-        let mut pssh_data_vec: Vec<Vec<u8>> = Vec::new();
-        pssh_data_vec.push(pssh[32..].to_vec());
+            ClientIdentification::decode(self.identifier_blob.as_slice()).unwrap();
         let widevine_pssh_data: WidevinePsshData = WidevinePsshData {
-            pssh_data: pssh_data_vec,
+            pssh_data: vec![pssh[32..].to_vec()],
             license_type: Some(LicenseType::Streaming.into()),
-            request_id: Some(self.session_id.encode_to_vec()),
+            request_id: Some(self.session_id.clone()),
         };
         let content: ContentIdentification = ContentIdentification {
             content_id_variant: Some(ContentIdVariant::WidevinePsshData(widevine_pssh_data)),
@@ -69,31 +66,30 @@ impl Session {
         let license_request: LicenseRequest = LicenseRequest {
             client_id: Some(client_identification),
             content_id: Some(content),
-            r#type: Some(license_protocol::license_request::RequestType::New.into()),
+            r#type: Some(RequestType::New.into()),
             request_time: Some(i64::try_from(current_time()).unwrap()),
             protocol_version: Some(ProtocolVersion::Version21.into()),
             key_control_nonce: Some(rand::thread_rng().gen::<u32>()),
             ..Default::default()
         };
 
-        self.raw_lincese_request = Some(license_request.encode_to_vec());
+        let raw_license_request = license_request.encode_to_vec();
+        self.raw_lincese_request = Some(raw_license_request.clone());
 
-        let private_key = openssl::rsa::Rsa::private_key_from_pem(&self.private_key).unwrap();
-        let key_pair = openssl::pkey::PKey::from_rsa(private_key).unwrap();
+        let private_key = Rsa::private_key_from_pem(&self.private_key).unwrap();
+        let key_pair = PKey::from_rsa(private_key).unwrap();
 
         let mut signer = Signer::new(MessageDigest::sha1(), &key_pair).unwrap();
         signer.set_rsa_padding(Padding::PKCS1_PSS).unwrap();
         signer
             .set_rsa_pss_saltlen(RsaPssSaltlen::custom(20))
             .unwrap();
-        signer
-            .update(&self.raw_lincese_request.clone().unwrap())
-            .unwrap();
+        signer.update(&raw_license_request).unwrap();
         let signature = signer.sign_to_vec().unwrap();
 
-        let signed_license_request: SignedMessage = license_protocol::SignedMessage {
-            r#type: Some(license_protocol::signed_message::MessageType::LicenseRequest.into()),
-            msg: Some(self.raw_lincese_request.clone().unwrap()),
+        let signed_license_request: SignedMessage = SignedMessage {
+            r#type: Some(MessageType::LicenseRequest.into()),
+            msg: Some(raw_license_request),
             signature: Some(signature),
             ..Default::default()
         };
@@ -103,7 +99,7 @@ impl Session {
 
     pub fn parse_license(self, license: Vec<u8>) -> error::Result<Vec<KeyContainer>> {
         let signed_message: SignedMessage = SignedMessage::decode(&*license).unwrap();
-        let private_key = openssl::rsa::Rsa::private_key_from_pem(&self.private_key).unwrap();
+        let private_key = Rsa::private_key_from_pem(&self.private_key).unwrap();
         let mut decrypted_session_key: Vec<u8> = vec![0; private_key.size() as usize];
         private_key
             .private_decrypt(
@@ -113,15 +109,17 @@ impl Session {
             )
             .unwrap();
 
+        let raw_license_request = self.raw_lincese_request.unwrap();
+
         let encryption_key_base = vec![
             b"ENCRYPTION\x00".to_vec(),
-            self.raw_lincese_request.clone().unwrap(),
+            raw_license_request.clone(),
             b"\x00\x00\x00\x80".to_vec(),
         ]
         .concat();
         let authentication_key_base = vec![
             b"AUTHENTICATION\x00".to_vec(),
-            self.raw_lincese_request.clone().unwrap(),
+            raw_license_request.clone(),
             b"\x00\x00\x02\x00".to_vec(),
         ]
         .concat();
@@ -155,7 +153,7 @@ impl Session {
         assert_eq!(calculated_signature, signed_message.signature());
 
         let license: License = License::decode(signed_message.msg()).unwrap();
-        let mut decrypted_key_containers: Vec<KeyContainer> = Vec::new();
+        let mut key_containers: Vec<KeyContainer> = Vec::new();
         for key_container in license.key {
             let key_id = if key_container.id().len() > 0 {
                 hex::encode(key_container.id())
@@ -170,12 +168,12 @@ impl Session {
             )
             .unwrap();
             let decrypted_key = hex::encode(decrypted_key);
-            decrypted_key_containers.push(KeyContainer {
+            key_containers.push(KeyContainer {
                 kid: key_id,
                 key: decrypted_key,
             })
         }
-        return Ok(decrypted_key_containers);
+        return Ok(key_containers);
     }
 }
 
@@ -197,7 +195,7 @@ fn generate_session_token() -> Vec<u8> {
     return token;
 }
 
-fn check_pssh(pssh: Vec<u8>) -> bool {
+fn check_pssh(pssh: &Vec<u8>) -> bool {
     match license_protocol::WidevinePsshData::decode(&pssh[32..]) {
         Ok(_pssh_data) => true,
         Err(_error) => false,
@@ -207,9 +205,8 @@ fn check_pssh(pssh: Vec<u8>) -> bool {
 #[cfg(test)]
 mod tests {
 
-    use crate::error::check_request;
-
     use super::*;
+    use crate::error::check_request;
     use base64::{engine::general_purpose, Engine as _};
     use crunchyroll_rs::{
         crunchyroll::CrunchyrollBuilder, media::Media, Crunchyroll, Locale, Series,
@@ -220,8 +217,8 @@ mod tests {
     use serde::{Deserialize, Serialize};
     use std::{env, fs};
 
-    #[derive(Serialize, Deserialize, Debug)]
-    struct DrmAuth {
+    #[derive(Serialize, Debug)]
+    struct AuthParameters {
         accounting_id: String,
         asset_id: String,
         session_id: String,
@@ -263,7 +260,7 @@ mod tests {
             .name("asset_id")
             .unwrap()
             .as_str();
-        let drm_auth = DrmAuth {
+        let drm_auth = AuthParameters {
             accounting_id: String::from("crunchyroll"),
             asset_id: String::from(asset_id),
             session_id: format!(
@@ -324,7 +321,7 @@ mod tests {
         //PSSH from .mpd search for something like cenc...
         let pssh = general_purpose::STANDARD.decode("AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQmYVDQW4gNdatYCGbY/l5jRoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lZelJqTlRnNE1UUmpORFEwTWpGaVpqRmlObUprTXpka01USm1NVFppWmpjaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=").unwrap();
         let mut session = Session::new(device_client_id_blob, device_private_key);
-        let license_request = session.create_license_request(pssh);
+        let license_request = session.create_license_request(&pssh);
 
         let response = crunchy
             .client()
@@ -550,7 +547,7 @@ mod tests {
         assert!(device_private_key.len() > 0, "private key was not given");
         let pssh = general_purpose::STANDARD.decode(BITMOVIN_PSSH_B64).unwrap();
         let mut session = Session::new(device_client_id_blob, device_private_key);
-        let license_request = session.create_license_request(pssh);
+        let license_request = session.create_license_request(&pssh);
 
         let client = reqwest::Client::new();
         let license = client
