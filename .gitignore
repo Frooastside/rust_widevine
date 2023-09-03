@@ -1,0 +1,6 @@
+/target
+
+security/
+.env
+
+/src/license_protocol.rs
