@@ -1,3 +1,6 @@
+// Copyright 2022-NOW Crunchy Labs Team
+// SPDX-License-Identifier: MIT
+
 use http::StatusCode;
 use serde::Deserialize;
 use serde_json::Value;
