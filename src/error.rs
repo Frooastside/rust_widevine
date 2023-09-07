@@ -13,6 +13,9 @@ pub enum Error {
     Internal {
         message: String,
     },
+    OpenSSL {
+        stack: openssl::error::ErrorStack,
+    },
     Request {
         message: String,
         status: Option<StatusCode>,
@@ -65,6 +68,7 @@ impl Display for Error {
             }
             Error::Input { message } => write!(f, "{message}"),
             Error::Block { message, body, url } => write!(f, "{message} ({url}): {body}"),
+            Error::OpenSSL { stack } => todo!(),
         }
     }
 }
@@ -78,6 +82,12 @@ impl From<serde_json::Error> for Error {
             content: vec![],
             url: "n/a".to_string(),
         }
+    }
+}
+
+impl From<openssl::error::ErrorStack> for Error {
+    fn from(error_stack: openssl::error::ErrorStack) -> Self {
+        return Error::OpenSSL { stack: error_stack }
     }
 }
 
