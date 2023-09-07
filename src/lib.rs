@@ -152,9 +152,16 @@ impl Session {
         };
     }
 
-    pub fn set_default_service_certificate(&mut self) {
-        self.set_service_certificate(COMMON_SERVICE_CERTIFICATE.to_vec())
-            .unwrap();
+    pub fn set_default_service_certificate(&mut self) -> error::Result<()> {
+        return self.set_service_certificate(COMMON_SERVICE_CERTIFICATE.to_vec());
+    }
+
+    pub fn set_service_certificate_from_message(
+        &mut self,
+        signed_message: Vec<u8>,
+    ) -> error::Result<()> {
+        let signed_message: SignedMessage = SignedMessage::decode(&*signed_message).unwrap();
+        return self.set_service_certificate(signed_message.msg().to_vec());
     }
 
     pub fn set_service_certificate(
@@ -162,22 +169,31 @@ impl Session {
         raw_service_certificate: Vec<u8>,
     ) -> error::Result<()> {
         let signed_service_certificate =
-            SignedDrmCertificate::decode(&*raw_service_certificate).unwrap();
-        let verified = verify_service_certificate(&signed_service_certificate).unwrap();
-        println!("verified: {}", verified);
+            match SignedDrmCertificate::decode(&*raw_service_certificate) {
+                Ok(signed_service_certificate) => signed_service_certificate,
+                Err(_error) => {
+                    return Err(error::Error::Input {
+                        message: "Provided data is not a signed service certificate.".to_string(),
+                    })
+                }
+            };
+        let verified = match verify_service_certificate(&signed_service_certificate) {
+            Ok(verified) => verified,
+            Err(error) => {
+                return Err(error::Error::OpenSSL {
+                    message: "An error occurred while verifying the service certificate"
+                        .to_string(),
+                    stack: error,
+                })
+            }
+        };
         if !verified {
-            return Err(error::Error::Internal {
-                message: String::from("TODO: Could not verify signature of service certificate"),
+            return Err(error::Error::Input {
+                message: "".to_string(),
             });
         }
         self.signed_service_certificate = Some(signed_service_certificate);
         return Ok(());
-    }
-
-    pub fn set_service_certificate_from_message(&mut self, signed_message: Vec<u8>) {
-        let signed_message: SignedMessage = SignedMessage::decode(&*signed_message).unwrap();
-        self.set_service_certificate(signed_message.msg().to_vec())
-            .unwrap();
     }
 
     pub fn create_license_request(
@@ -356,8 +372,9 @@ fn encrypte_client_identification(
 
 fn verify_service_certificate(
     signed_service_certificate: &SignedDrmCertificate,
-) -> error::Result<bool> {
-    let public_key = PKey::from_rsa(Rsa::public_key_from_der_pkcs1(&WIDEVINE_ROOT_PUBLIC_KEY)?)?;
+) -> Result<bool, openssl::error::ErrorStack> {
+    let public_key = Rsa::public_key_from_der_pkcs1(&WIDEVINE_ROOT_PUBLIC_KEY)?;
+    let public_key = PKey::from_rsa(public_key)?;
     let mut verifier = Verifier::new(MessageDigest::sha1(), &public_key)?;
     verifier.set_rsa_padding(Padding::PKCS1_PSS)?;
     verifier.set_rsa_pss_saltlen(RsaPssSaltlen::custom(20))?;

@@ -14,6 +14,7 @@ pub enum Error {
         message: String,
     },
     OpenSSL {
+        message: String,
         stack: openssl::error::ErrorStack,
     },
     Request {
@@ -33,7 +34,7 @@ pub enum Error {
         message: String,
         body: String,
         url: String,
-    }
+    },
 }
 
 impl Display for Error {
@@ -68,7 +69,7 @@ impl Display for Error {
             }
             Error::Input { message } => write!(f, "{message}"),
             Error::Block { message, body, url } => write!(f, "{message} ({url}): {body}"),
-            Error::OpenSSL { stack } => todo!(),
+            Error::OpenSSL { message, stack } => write!(f, "{message} {stack}"),
         }
     }
 }
@@ -82,12 +83,6 @@ impl From<serde_json::Error> for Error {
             content: vec![],
             url: "n/a".to_string(),
         }
-    }
-}
-
-impl From<openssl::error::ErrorStack> for Error {
-    fn from(error_stack: openssl::error::ErrorStack) -> Self {
-        return Error::OpenSSL { stack: error_stack }
     }
 }
 
@@ -211,9 +206,9 @@ pub(crate) fn is_request_error(value: Value, url: &String, status: &StatusCode) 
 use reqwest::Response;
 #[cfg(test)]
 use serde::de::DeserializeOwned;
+
 #[cfg(test)]
 pub(crate) async fn check_request<T: DeserializeOwned>(url: String, resp: Response) -> Result<T> {
-
     let content_length = resp.content_length().unwrap_or(0);
     let status = resp.status();
     let _raw = match resp.status().as_u16() {
