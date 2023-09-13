@@ -17,6 +17,9 @@ pub enum Error {
         message: String,
         stack: openssl::error::ErrorStack,
     },
+    Input {
+        message: String,
+    },
     Request {
         message: String,
         status: Option<StatusCode>,
@@ -26,9 +29,6 @@ pub enum Error {
         message: String,
         content: Vec<u8>,
         url: String,
-    },
-    Input {
-        message: String,
     },
     Block {
         message: String,
