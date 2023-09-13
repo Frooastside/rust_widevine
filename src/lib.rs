@@ -199,7 +199,7 @@ impl Session {
     pub fn create_license_request(
         &mut self,
         ldm: &LicenseDecryptionModule,
-        pssh: &Vec<u8>,
+        pssh: Vec<u8>,
     ) -> Result<Vec<u8>, Error> {
         assert_eq!(pssh[12..28], WIDEVINE_SYSTEM_ID);
         check_pssh(&pssh);
@@ -551,7 +551,7 @@ mod tests {
         //PSSH from .mpd search for something like cenc...
         let pssh = general_purpose::STANDARD.decode("AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQmYVDQW4gNdatYCGbY/l5jRoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lZelJqTlRnNE1UUmpORFEwTWpGaVpqRmlObUprTXpka01USm1NVFppWmpjaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=").unwrap();
         let mut session = Session::new();
-        let license_request = session.create_license_request(&ldm, &pssh);
+        let license_request = session.create_license_request(&ldm, pssh);
 
         let response = crunchy
             .client()
@@ -793,9 +793,9 @@ mod tests {
             .await
             .unwrap();
 
-        session.set_service_certificate_from_message(service_certificate.to_vec());
+        session.set_service_certificate_from_message(service_certificate.to_vec()).unwrap();
 
-        let license_request = session.create_license_request(&ldm, &pssh);
+        let license_request = session.create_license_request(&ldm, pssh);
 
         let license = client
             .post(BITMOVIN_LICENSE_URL)
