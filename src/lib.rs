@@ -620,13 +620,9 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct CrunchyLicense {
-        #[serde(rename = "service_version_info")]
         pub service_version_info: ServiceVersionInfo,
-        #[serde(rename = "supported_tracks")]
         pub supported_tracks: Vec<SupportedTrack>,
-        #[serde(rename = "message_type")]
         pub message_type: String,
         pub status: String,
         pub license: String,
@@ -634,20 +630,15 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct ServiceVersionInfo {
-        #[serde(rename = "license_sdk_version")]
         pub license_sdk_version: String,
-        #[serde(rename = "license_service_version")]
         pub license_service_version: String,
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct SupportedTrack {
         #[serde(rename = "type")]
         pub type_field: String,
-        #[serde(rename = "key_id")]
         pub key_id: String,
     }
 
@@ -667,11 +658,9 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct Captions {}
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct HardSubs {
         #[serde(rename = "en-US")]
         pub en_us: HardSub,
@@ -694,7 +683,6 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct HardSub {
         pub hlang: String,
         pub url: String,
@@ -713,7 +701,6 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct Subtitles {
         #[serde(rename = "en-US")]
         pub en_us: Subtitle,
@@ -736,7 +723,6 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct Subtitle {
         pub format: String,
         pub language: String,
@@ -744,17 +730,12 @@ mod tests {
     }
 
     #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
     pub struct Version {
-        #[serde(rename = "audio_locale")]
         pub audio_locale: String,
         pub guid: String,
-        #[serde(rename = "is_premium_only")]
         pub is_premium_only: bool,
-        #[serde(rename = "media_guid")]
         pub media_guid: String,
         pub original: bool,
-        #[serde(rename = "season_guid")]
         pub season_guid: String,
         pub variant: String,
     }
