@@ -481,7 +481,7 @@ mod tests {
         let stream = episode_1.stream().await.unwrap();
         let variants = stream.variants.get(&Locale::de_DE).unwrap();
         let drm_adaptive_hls = variants.drm_adaptive_hls.as_ref().unwrap();
-        let regex = Regex::new(r"\/p\/(?<asset_id>[a-zA-Z0-9]+)_").unwrap();
+        let regex = Regex::new(r"/p/(?<asset_id>[a-zA-Z0-9]+)_").unwrap();
         let asset_id = regex
             .captures(drm_adaptive_hls.url.as_str())
             .unwrap()
