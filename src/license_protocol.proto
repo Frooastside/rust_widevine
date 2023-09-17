@@ -121,7 +121,7 @@ message License {
     // The SecurityLevel enumeration allows the server to communicate the level
     // of robustness required by the client, in order to use the key.
     enum SecurityLevel {
-      // Software-based whitebox crypto is required.
+      // Software-based white-box crypto is required.
       SW_SECURE_CRYPTO = 1;
 
       // Software crypto and an obfuscated decoder is required.
@@ -388,7 +388,7 @@ message SignedMessage {
   enum SessionKeyType {
     UNDEFINED = 0;
     WRAPPED_AES_KEY = 1;
-    EPHERMERAL_ECC_PUBLIC_KEY = 2;
+    EPHEMERAL_ECC_PUBLIC_KEY = 2;
   }
   optional MessageType type = 1;
   optional bytes msg = 2;
@@ -401,7 +401,7 @@ message SignedMessage {
   // If populated, the contents of this field will be signaled by the
   // |session_key_type| type. If the |session_key_type| is WRAPPED_AES_KEY the
   // key is the bytes of an encrypted AES key. If the |session_key_type| is
-  // EPHERMERAL_ECC_PUBLIC_KEY the field contains the bytes of an RFC5208 ASN1
+  // EPHEMERAL_ECC_PUBLIC_KEY the field contains the bytes of an RFC5208 ASN1
   // serialized ECC public key.
   optional bytes session_key = 4;
   // Remote attestation data which will be present in the initial license
@@ -527,7 +527,7 @@ message ClientIdentification {
 // EncryptedClientIdentification message used to hold ClientIdentification
 // messages encrypted for privacy purposes.
 message EncryptedClientIdentification {
-  // Provider ID for which the ClientIdentifcation is encrypted (owner of
+  // Provider ID for which the ClientIdentification is encrypted (owner of
   // service certificate).
   optional string provider_id = 1;
   // Serial number for the service certificate for which ClientIdentification is
@@ -656,7 +656,7 @@ message WidevinePsshData {
     optional uint32 entitlement_key_size_bytes = 5 [default = 32];
   }
 
-  // Entitlement or content key IDs. Can onnly present in SINGLE or ENTITLEMENT
+  // Entitlement or content key IDs. Can only present in SINGLE or ENTITLEMENT
   // PSSHs. May be repeated to facilitate delivery of multiple keys in a
   // single license. Cannot be used in conjunction with content_id or
   // group_ids, which are the preferred mechanism.
@@ -671,7 +671,7 @@ message WidevinePsshData {
   // Crypto period index, for media using key rotation. Always corresponds to
   // The content key period. This means that if using entitlement licensing
   // the ENTITLED_KEY PSSHs will have sequential crypto_period_index's, whereas
-  // the ENTITELEMENT PSSHs will have gaps in the sequence. Required if doing
+  // the ENTITLEMENT PSSHs will have gaps in the sequence. Required if doing
   // key rotation.
   optional uint32 crypto_period_index = 7;
 

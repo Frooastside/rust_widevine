@@ -22,7 +22,7 @@ use openssl::{
     symm::{decrypt, Cipher},
 };
 use prost::Message;
-use rand::Rng;
+use rand::{random, Rng};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const WIDEVINE_SYSTEM_ID: [u8; 16] = [
@@ -58,7 +58,7 @@ pub const WIDEVINE_ROOT_PUBLIC_KEY: [u8; 398] = [
     0x78, 0xB4, 0x64, 0x82, 0x50, 0xD2, 0x33, 0x5F, 0x91, 0x02, 0x03, 0x01, 0x00, 0x01,
 ];
 
-pub const SERVICE_CERTIFICATE_CHALLANGE: [u8; 2] = [0x08, 0x04];
+pub const SERVICE_CERTIFICATE_CHALLENGE: [u8; 2] = [0x08, 0x04];
 
 pub const COMMON_SERVICE_CERTIFICATE: [u8; 716] = [
     0x08, 0x05, 0x12, 0xC7, 0x05, 0x0A, 0xC1, 0x02, 0x08, 0x03, 0x12, 0x10, 0x17, 0x05, 0xB9, 0x17,
@@ -124,8 +124,8 @@ impl LicenseDecryptionModule {
         let private_key: Rsa<Private> = Rsa::private_key_from_pem(private_key).unwrap();
         let pkey: PKey<Private> = PKey::from_rsa(private_key.clone()).unwrap();
         return LicenseDecryptionModule {
-            identification_blob: identification_blob,
-            private_key: private_key,
+            identification_blob,
+            private_key,
             private_key_pkey: pkey,
             _vmp_blob: vmp_blob,
         };
@@ -140,7 +140,7 @@ pub struct KeyContainer {
 pub struct Session {
     pub session_id: Vec<u8>,
     signed_service_certificate: Option<SignedDrmCertificate>,
-    raw_lincese_request: Option<Vec<u8>>,
+    raw_license_request: Option<Vec<u8>>,
 }
 
 impl Session {
@@ -148,7 +148,7 @@ impl Session {
         return Session {
             session_id: generate_session_token(),
             signed_service_certificate: None,
-            raw_lincese_request: None,
+            raw_license_request: None,
         };
     }
 
@@ -172,7 +172,7 @@ impl Session {
             match SignedDrmCertificate::decode(&*raw_service_certificate) {
                 Ok(signed_service_certificate) => signed_service_certificate,
                 Err(_error) => {
-                    return Err(error::Error::Input {
+                    return Err(Error::Input {
                         message: "Provided data is not a signed service certificate.".to_string(),
                     })
                 }
@@ -180,7 +180,7 @@ impl Session {
         let verified = match verify_service_certificate(&signed_service_certificate) {
             Ok(verified) => verified,
             Err(error) => {
-                return Err(error::Error::OpenSSL {
+                return Err(Error::OpenSSL {
                     message: "An error occurred while verifying the service certificate"
                         .to_string(),
                     stack: error,
@@ -188,7 +188,7 @@ impl Session {
             }
         };
         if !verified {
-            return Err(error::Error::Input {
+            return Err(Error::Input {
                 message: "".to_string(),
             });
         }
@@ -219,19 +219,19 @@ impl Session {
             r#type: Some(RequestType::New.into()),
             request_time: Some(i64::try_from(current_time()).unwrap()),
             protocol_version: Some(ProtocolVersion::Version21.into()),
-            key_control_nonce: Some(rand::thread_rng().gen::<u32>()),
+            key_control_nonce: Some(random::<u32>()),
             ..Default::default()
         };
         if let Some(signed_service_certificate) = &self.signed_service_certificate {
             let encrypted_client_identification =
-                encrypte_client_identification(&client_identification, &signed_service_certificate);
+                encrypt_client_identification(&client_identification, &signed_service_certificate);
             license_request.encrypted_client_id = Some(encrypted_client_identification);
         } else {
             license_request.client_id = Some(client_identification);
         }
 
         let raw_license_request: Vec<u8> = license_request.encode_to_vec();
-        self.raw_lincese_request = Some(raw_license_request.clone());
+        self.raw_license_request = Some(raw_license_request.clone());
 
         let mut signer = Signer::new(MessageDigest::sha1(), &ldm.private_key_pkey).unwrap();
         signer.set_rsa_padding(Padding::PKCS1_PSS).unwrap();
@@ -266,7 +266,7 @@ impl Session {
             )
             .unwrap();
 
-        let raw_license_request = self.raw_lincese_request.unwrap();
+        let raw_license_request = self.raw_license_request.unwrap();
 
         let encryption_key_base = vec![
             b"ENCRYPTION\x00".to_vec(),
@@ -334,12 +334,12 @@ impl Session {
     }
 }
 
-fn encrypte_client_identification(
+fn encrypt_client_identification(
     client_identification: &ClientIdentification,
     signed_service_certificate: &SignedDrmCertificate,
 ) -> EncryptedClientIdentification {
-    let key: [u8; 16] = rand::thread_rng().gen::<[u8; 16]>();
-    let iv: [u8; 16] = rand::thread_rng().gen::<[u8; 16]>();
+    let key: [u8; 16] = random::<[u8; 16]>();
+    let iv: [u8; 16] = random::<[u8; 16]>();
     let service_certificate: DrmCertificate =
         DrmCertificate::decode(signed_service_certificate.drm_certificate()).unwrap();
 
@@ -391,7 +391,7 @@ fn current_time() -> u64 {
 }
 
 fn generate_session_token() -> Vec<u8> {
-    let random_bytes = rand::thread_rng().gen::<[u8; 4]>();
+    let random_bytes = random::<[u8; 4]>();
     let token = vec![
         random_bytes.to_vec(),
         b"\x00\x00\x00\x00".to_vec(),
@@ -402,7 +402,7 @@ fn generate_session_token() -> Vec<u8> {
 }
 
 fn check_pssh(pssh: &Vec<u8>) -> bool {
-    match license_protocol::WidevinePsshData::decode(&pssh[32..]) {
+    match WidevinePsshData::decode(&pssh[32..]) {
         Ok(_pssh_data) => true,
         Err(_error) => false,
     }
@@ -462,7 +462,7 @@ mod tests {
             .build()
             .unwrap();
         let crunchy = Crunchyroll::builder()
-            .locale(crunchyroll_rs::Locale::de_DE)
+            .locale(Locale::de_DE)
             .client(client)
             .login_with_etp_rt(&etp_rt)
             .await
@@ -788,11 +788,11 @@ mod tests {
         let pssh = general_purpose::STANDARD.decode(BITMOVIN_PSSH_B64).unwrap();
         let mut session = Session::new();
 
-        let client = reqwest::Client::new();
+        let client = Client::new();
 
         let service_certificate = client
             .post(BITMOVIN_LICENSE_URL)
-            .body(SERVICE_CERTIFICATE_CHALLANGE.to_vec())
+            .body(SERVICE_CERTIFICATE_CHALLENGE.to_vec())
             .send()
             .await
             .unwrap()
