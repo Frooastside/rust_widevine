@@ -29,6 +29,7 @@ pub const WIDEVINE_SYSTEM_ID: [u8; 16] = [
     0xED, 0xEF, 0x8B, 0xA9, 0x79, 0xD6, 0x4A, 0xCE, 0xA3, 0xC8, 0x27, 0xDC, 0xD5, 0x1D, 0x21, 0xED,
 ];
 
+//noinspection SpellCheckingInspection
 /// From Signed Root DRM Certificate (CpwDCAASAQAY3ZSIiwUijgMwggGKAoIBgQC0/jnDZZAD2zwRlwnoaM3yw16b8udNI7EQ24dl39z7nzWgVwNTTPZtNX2meNuzNtI/nECplSZyf7i+Zt/FIZh4FRZoXS9GDkPLioQ5q/uwNYAivjQji6tTW3LsS7VIaVM+R1/9Cf2ndhOPD5LWTN+udqm62SIQqZ1xRdbX4RklhZxTmpfrhNfMqIiCIHAmIP1+QFAn4iWTb7w+cqD6wb0ptE2CXMG0y5xyfrDpihc+GWP8/YJIK7eyM7l97Eu6iR8nuJuISISqGJIOZfXIbBH/azbkdDTKjDOx+biOtOYS4AKYeVJeRTP/Edzrw1O6fGAaET0A+9K3qjD6T15Id1sX3HXvb9IZbdy+f7B4j9yCYEy/5CkGXmmMOROtFCXtGbLynwGCDVZEiMg17B8RsyTgWQ035Ec86kt/lzEcgXyUikx9aBWE/6UI/Rjn5yvkRycSEbgj7FiTPKwS0ohtQT3F/hzcufjUUT4H5QNvpxLoEve1zqaWVT94tGSCUNIzX5ECAwEAARKAA1jx1k0ECXvf1+9dOwI5F/oUNnVKOGeFVxKnFO41FtU9v0KG9mkAds2T9Hyy355EzUzUrgkYU0Qy7OBhG+XaE9NVxd0ay5AeflvG6Q8in76FAv6QMcxrA4S9IsRV+vXyCM1lQVjofSnaBFiC9TdpvPNaV4QXezKHcLKwdpyywxXRESYqI3WZPrl3IjINvBoZwdVlkHZVdA8OaU1fTY8Zr9/WFjGUqJJfT7x6Mfiujq0zt+kw0IwKimyDNfiKgbL+HIisKmbF/73mF9BiC9yKRfewPlrIHkokL2yl4xyIFIPVxe9enz2FRXPia1BSV0z7kmxmdYrWDRuu8+yvUSIDXQouY5OcCwEgqKmELhfKrnPsIht5rvagcizfB0fbiIYwFHghESKIrNdUdPnzJsKlVshWTwApHQh7evuVicPumFSePGuUBRMS9nG5qxPDDJtGCHs9Mmpoyh6ckGLF7RC5HxclzpC5bc3ERvWjYhN0AqdipPpV2d7PouaAdFUGSdUCDA==)
 pub const WIDEVINE_ROOT_PUBLIC_KEY: [u8; 398] = [
     0x30, 0x82, 0x01, 0x8A, 0x02, 0x82, 0x01, 0x81, 0x00, 0xB4, 0xFE, 0x39, 0xC3, 0x65, 0x90, 0x03,
@@ -431,27 +432,12 @@ mod tests {
         user_id: String,
     }
 
+    //noinspection SpellCheckingInspection
     const CRUNCHYROLL_SERVICE_CERTIFICATE: &str = "CrsCCAMSEKDc0WAwLAQT1SB2ogyBJEwYv4Tx7gUijgIwggEKAoIBAQC8Xc/GTRwZDtlnBThq8V382D1oJAM0F/YgCQtNDLz7vTWJ+QskNGi5Dd2qzO4s48Cnx5BLvL4H0xCRSw2Ed6ekHSdrRUwyoYOE+M/t1oIbccwlTQ7o+BpV1X6TB7fxFyx1jsBtRsBWphU65w121zqmSiwzZzJ4xsXVQCJpQnNI61gzHO42XZOMuxytMm0F6puNHTTqhyY3Z290YqvSDdOB+UY5QJuXJgjhvOUD9+oaLlvT+vwmV2/NJWxKqHBKdL9JqvOnNiQUF0hDI7Wf8Wb63RYSXKE27Ky31hKgx1wuq7TTWkA+kHnJTUrTEfQxfPR4dJTquE+IDLAi5yeVVxzbAgMBAAE6DGNhc3RsYWJzLmNvbUABEoADMmGXpXg/0qxUuwokpsqVIHZrJfu62ar+BF8UVUKdK5oYQoiTZd9OzK3kr29kqGGk3lSgM0/p499p/FUL8oHHzgsJ7Hajdsyzn0Vs3+VysAgaJAkXZ+k+N6Ka0WBiZlCtcunVJDiHQbz1sF9GvcePUUi2fM/h7hyskG5ZLAyJMzTvgnV3D8/I5Y6mCFBPb/+/Ri+9bEvquPF3Ff9ip3yEHu9mcQeEYCeGe9zR/27eI5MATX39gYtCnn7dDXVxo4/rCYK0A4VemC3HRai2X3pSGcsKY7+6we7h4IycjqtuGtYg8AbaigovcoURAZcr1d/G0rpREjLdVLG0Gjqk63Gx688W5gh3TKemsK3R1jV0dOfj3e6uV/kTpsNRL9KsD0v7ysBQVdUXEbJotcFz71tI5qc3jwr6GjYIPA3VzusD17PN6AGQniMwxJV12z/EgnUopcFB13osydpD2AaDsgWo5RWJcNf+fzCgtUQx/0Au9+xVm5LQBdv8Ja4f2oiHN3dw";
-
-    #[tokio::test]
-    async fn chrome_cdm() {
-        let device_client_id_blob =
-            fs::read("security/device_client_id_blob").unwrap_or(Vec::new());
-        let device_private_key = fs::read("security/device_private_key").unwrap_or(Vec::new());
-        assert!(device_client_id_blob.len() > 0, "id blob was not given");
-        assert!(device_private_key.len() > 0, "private key was not given");
-        let _ldm: LicenseDecryptionModule =
-            LicenseDecryptionModule::new(&device_private_key, device_client_id_blob, None);
-        let mut session = Session::new();
-        println!("{}", general_purpose::STANDARD.encode(WIDEVINE_SYSTEM_ID));
-        session
-            .set_service_certificate(
-                general_purpose::STANDARD
-                    .decode(CRUNCHYROLL_SERVICE_CERTIFICATE)
-                    .unwrap(),
-            )
-            .unwrap();
-    }
+    //noinspection SpellCheckingInspection
+    const CRUNCHYROLL_SAL_S1E1_PSSH: &str = "AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQmYVDQW4gNdatYCGbY/l5jRoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lZelJqTlRnNE1UUmpORFEwTWpGaVpqRmlObUprTXpka01USm1NVFppWmpjaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=";
+    //noinspection SpellCheckingInspection
+    const CRUNCHYROLL_SAL_S1E1_CONTENT_ID: &str = "GJWU2E72X";
 
     #[tokio::test]
     #[ignore]
@@ -548,8 +534,9 @@ mod tests {
         assert!(device_private_key.len() > 0, "private key was not given");
         let ldm: LicenseDecryptionModule =
             LicenseDecryptionModule::new(&device_private_key, device_client_id_blob, None);
-        //PSSH from .mpd search for something like cenc...
-        let pssh = general_purpose::STANDARD.decode("AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQmYVDQW4gNdatYCGbY/l5jRoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lZelJqTlRnNE1UUmpORFEwTWpGaVpqRmlObUprTXpka01USm1NVFppWmpjaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=").unwrap();
+
+        //PSSH from .mpd search for something like "CENC"...
+        let pssh = general_purpose::STANDARD.decode(CRUNCHYROLL_SAL_S1E1_PSSH).unwrap();
         let mut session = Session::new();
         session
             .set_service_certificate(
@@ -568,7 +555,7 @@ mod tests {
                 header::AUTHORIZATION,
                 format!("Bearer {}", login_response.access_token),
             )
-            .header("X-Cr-Content-Id", "GJWU2E72X")
+            .header("X-Cr-Content-Id", CRUNCHYROLL_SAL_S1E1_CONTENT_ID)
             .header("X-Cr-Video-Token", play_chrome.token)
             .body(license_request.unwrap())
             .send()
@@ -772,6 +759,7 @@ mod tests {
         pub variant: String,
     }
 
+    //noinspection SpellCheckingInspection
     const BITMOVIN_PSSH_B64: &str = "AAAAW3Bzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAADsIARIQ62dqu8s0Xpa7z2FmMPGj2hoNd2lkZXZpbmVfdGVzdCIQZmtqM2xqYVNkZmFsa3IzaioCSEQyAA==";
     const BITMOVIN_LICENSE_URL: &str = "https://cwip-shaka-proxy.appspot.com/no_auth";
 
