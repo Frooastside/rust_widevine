@@ -435,9 +435,11 @@ mod tests {
     //noinspection SpellCheckingInspection
     const CRUNCHYROLL_SERVICE_CERTIFICATE: &str = "CrsCCAMSEKDc0WAwLAQT1SB2ogyBJEwYv4Tx7gUijgIwggEKAoIBAQC8Xc/GTRwZDtlnBThq8V382D1oJAM0F/YgCQtNDLz7vTWJ+QskNGi5Dd2qzO4s48Cnx5BLvL4H0xCRSw2Ed6ekHSdrRUwyoYOE+M/t1oIbccwlTQ7o+BpV1X6TB7fxFyx1jsBtRsBWphU65w121zqmSiwzZzJ4xsXVQCJpQnNI61gzHO42XZOMuxytMm0F6puNHTTqhyY3Z290YqvSDdOB+UY5QJuXJgjhvOUD9+oaLlvT+vwmV2/NJWxKqHBKdL9JqvOnNiQUF0hDI7Wf8Wb63RYSXKE27Ky31hKgx1wuq7TTWkA+kHnJTUrTEfQxfPR4dJTquE+IDLAi5yeVVxzbAgMBAAE6DGNhc3RsYWJzLmNvbUABEoADMmGXpXg/0qxUuwokpsqVIHZrJfu62ar+BF8UVUKdK5oYQoiTZd9OzK3kr29kqGGk3lSgM0/p499p/FUL8oHHzgsJ7Hajdsyzn0Vs3+VysAgaJAkXZ+k+N6Ka0WBiZlCtcunVJDiHQbz1sF9GvcePUUi2fM/h7hyskG5ZLAyJMzTvgnV3D8/I5Y6mCFBPb/+/Ri+9bEvquPF3Ff9ip3yEHu9mcQeEYCeGe9zR/27eI5MATX39gYtCnn7dDXVxo4/rCYK0A4VemC3HRai2X3pSGcsKY7+6we7h4IycjqtuGtYg8AbaigovcoURAZcr1d/G0rpREjLdVLG0Gjqk63Gx688W5gh3TKemsK3R1jV0dOfj3e6uV/kTpsNRL9KsD0v7ysBQVdUXEbJotcFz71tI5qc3jwr6GjYIPA3VzusD17PN6AGQniMwxJV12z/EgnUopcFB13osydpD2AaDsgWo5RWJcNf+fzCgtUQx/0Au9+xVm5LQBdv8Ja4f2oiHN3dw";
     //noinspection SpellCheckingInspection
-    const CRUNCHYROLL_SAL_S1E1_PSSH: &str = "AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQmYVDQW4gNdatYCGbY/l5jRoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lZelJqTlRnNE1UUmpORFEwTWpGaVpqRmlObUprTXpka01USm1NVFppWmpjaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=";
+    const CRUNCHYROLL_LLWUOS_S1_CONTENT_ID: &str = "GNVHKN75X";
     //noinspection SpellCheckingInspection
-    const CRUNCHYROLL_SAL_S1E1_CONTENT_ID: &str = "GJWU2E72X";
+    const CRUNCHYROLL_LLWUOS_S1E1_PSSH: &str = "AAAAoXBzc2gAAAAA7e+LqXnWSs6jyCfc1R0h7QAAAIEIARIQ0xdPDGpfNFigfmEdok1kdBoIY2FzdGxhYnMiWGV5SmhjM05sZEVsa0lqb2lOVE5tT1dGaE5EZ3dNVGRtTjJVNE9HUTNaamcxWkRsak5qUTRZbUkwWlRZaUxDSjJZWEpwWVc1MFNXUWlPaUpoZG10bGVTSjkyB2RlZmF1bHQ=";
+    //noinspection SpellCheckingInspection
+    const CRUNCHYROLL_LLWUOS_S1E1_CONTENT_ID: &str = "G31UX31PZ";
 
     #[tokio::test]
     #[ignore]
@@ -453,16 +455,16 @@ mod tests {
             .login_with_etp_rt(&etp_rt)
             .await
             .unwrap();
-        let demon_slayer = Series::from_id(&crunchy, "G9VHN9185").await.unwrap();
-        let seasons = demon_slayer.seasons().await.unwrap();
+        let show = Series::from_id(&crunchy, CRUNCHYROLL_LLWUOS_S1_CONTENT_ID).await.unwrap();
+        let seasons = show.seasons().await.unwrap();
         let season_1 = seasons
             .iter()
-            .find(|season| season.season_number == 1)
+            .find(|season| season.season_number == 2)
             .unwrap();
         let episodes = season_1.episodes().await.unwrap();
         let episode_1 = episodes
             .iter()
-            .find(|episode| episode.episode_number == 1)
+            .find(|episode| episode.episode_number.unwrap() == 1)
             .unwrap();
         let stream = episode_1.stream().await.unwrap();
         let variants = stream.variants.get(&Locale::de_DE).unwrap();
@@ -497,7 +499,7 @@ mod tests {
             .unwrap();
         let response = crunchy
             .client()
-            .get("https://cr-play-service.prd.crunchyrollsvc.com/v1/GJWU2E72X/web/chrome/play")
+            .get(format!("https://cr-play-service.prd.crunchyrollsvc.com/v1/{}/web/chrome/play", CRUNCHYROLL_LLWUOS_S1E1_CONTENT_ID))
             .header(
                 header::AUTHORIZATION,
                 format!("Bearer {}", login_response.access_token),
@@ -507,7 +509,7 @@ mod tests {
             .unwrap();
         let play_chrome: ChromePlay = check_request(
             String::from(
-                "https://cr-play-service.prd.crunchyrollsvc.com/v1/GJWU2E72X/web/chrome/play",
+                "https://cr-play-service.prd.crunchyrollsvc.com/v1/G31UX31PZ/web/chrome/play",
             ),
             response,
         )
@@ -536,7 +538,7 @@ mod tests {
             LicenseDecryptionModule::new(&device_private_key, device_client_id_blob, None);
 
         //PSSH from .mpd search for something like "CENC"...
-        let pssh = general_purpose::STANDARD.decode(CRUNCHYROLL_SAL_S1E1_PSSH).unwrap();
+        let pssh = general_purpose::STANDARD.decode(CRUNCHYROLL_LLWUOS_S1E1_PSSH).unwrap();
         let mut session = Session::new();
         session
             .set_service_certificate(
@@ -555,7 +557,7 @@ mod tests {
                 header::AUTHORIZATION,
                 format!("Bearer {}", login_response.access_token),
             )
-            .header("X-Cr-Content-Id", CRUNCHYROLL_SAL_S1E1_CONTENT_ID)
+            .header("X-Cr-Content-Id", CRUNCHYROLL_LLWUOS_S1E1_CONTENT_ID)
             .header("X-Cr-Video-Token", play_chrome.token)
             .body(license_request.unwrap())
             .send()
@@ -668,16 +670,10 @@ mod tests {
         pub de_de: HardSub,
         #[serde(rename = "es-419")]
         pub es_419: HardSub,
-        #[serde(rename = "es-ES")]
-        pub es_es: HardSub,
         #[serde(rename = "fr-FR")]
         pub fr_fr: HardSub,
-        #[serde(rename = "it-IT")]
-        pub it_it: HardSub,
         #[serde(rename = "pt-BR")]
         pub pt_br: HardSub,
-        #[serde(rename = "ru-RU")]
-        pub ru_ru: HardSub,
         #[serde(rename = "ar-SA")]
         pub ar_sa: HardSub,
     }
@@ -708,16 +704,10 @@ mod tests {
         pub de_de: Subtitle,
         #[serde(rename = "es-419")]
         pub es_419: Subtitle,
-        #[serde(rename = "es-ES")]
-        pub es_es: Subtitle,
         #[serde(rename = "fr-FR")]
         pub fr_fr: Subtitle,
-        #[serde(rename = "it-IT")]
-        pub it_it: Subtitle,
         #[serde(rename = "pt-BR")]
         pub pt_br: Subtitle,
-        #[serde(rename = "ru-RU")]
-        pub ru_ru: Subtitle,
         #[serde(rename = "ar-SA")]
         pub ar_sa: Subtitle,
     }

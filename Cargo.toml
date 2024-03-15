@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 base64 = "0.21.3"
-crunchyroll-rs = { version = "0.6.2", features = ["experimental-stabilizations", "parse"], default-features = false}
+crunchyroll-rs = { version = "0.8.6", features = ["experimental-stabilizations", "parse"], default-features = false}
 dotenv = "0.15.0"
 hex = "0.4.3"
 http = "0.2.9"
