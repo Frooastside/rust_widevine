@@ -11,7 +11,7 @@ create a directory called `security` and put your `device_private_key` and `devi
 put your etp-rt cookie in a file called `.env` like this:
 
 ```env
-etp-rt=98daf35f-821e-4350-9c1f-6725014657d3
+etp_rt=98daf35f-821e-4350-9c1f-6725014657d3
 ```
 
 #### Bitmovin
