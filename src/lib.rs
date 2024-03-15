@@ -1,3 +1,6 @@
+// Copyright Frooastside
+// SPDX-License-Identifier: MIT
+
 pub mod error;
 pub mod license_protocol;
 
