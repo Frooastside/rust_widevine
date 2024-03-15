@@ -22,7 +22,7 @@ use openssl::{
     symm::{decrypt, Cipher},
 };
 use prost::Message;
-use rand::{random, Rng};
+use rand::{random};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub const WIDEVINE_SYSTEM_ID: [u8; 16] = [
@@ -423,6 +423,7 @@ mod tests {
     use reqwest::Client;
     use serde::{Deserialize, Serialize};
     use std::{env, fs};
+    use rand::{Rng};
 
     #[derive(Serialize, Debug)]
     struct AuthParameters {
