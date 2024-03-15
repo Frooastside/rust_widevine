@@ -1,10 +1,10 @@
 # rust_widevine
 
-## CDM
-
-create a directory called `security` and put your `device_private_key` and `device_client_id_blob` in it.
-
 ### Tests
+
+To use your CDM, create a directory called `security` and put your `device_private_key` and `device_client_id_blob` in it.
+
+Output of the tests will be in the `security` directory.
 
 #### Crunchyroll
 
